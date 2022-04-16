@@ -51,8 +51,6 @@ void setup() {
     while (1);
   }
   Serial.println("memory allocated!!!");
-  memset(framebuffer, 0x00, DISPLAY_WIDTH * DISPLAY_HEIGHT);  //1bit color
-  Serial.println("memory cleared!!!");
 
   // ---------------
   //    True Type
@@ -79,30 +77,40 @@ void setup() {
   Serial.println("read ttf OK");
   
   truetype.setFramebuffer(DISPLAY_WIDTH, DISPLAY_HEIGHT, 8, 0, framebuffer); //1bit, 
-  truetype.setCharacterSize(32);
   truetype.setCharacterSpacing(0);
-  //setTextBoundary(uint16_t _start_x, uint16_t _end_x, uint16_t _end_y)
   truetype.setTextBoundary(0,DISPLAY_WIDTH, DISPLAY_HEIGHT);
   truetype.setTextColor(0x01, 0x01); //Both fill & border are 1
 
   // Test for Draw True Type String
-  truetype.textDraw(0, 0, "This is a Book");  
 
   tft.setSwapBytes(true); // hardware dependent settings
 
-  // The following code is just to check the truetype decode result
-  for (int y=0; y<32; y++) {    
-      //Serial output for debug
-      if (y<10) Serial.print(" ");
-      Serial.print(y);
-      Serial.print(": ");
-    for (int x=0; x<DISPLAY_WIDTH; x++) {
-      byte v=framebuffer[y*DISPLAY_WIDTH+x];
-      Serial.print(v);
-      if (v==1)
-        tft.drawPixel(x, y+80, 0x001F ); //0x001F=blue
-    }
-    Serial.println();
+  for (int fontsize=8; fontsize<=40; fontsize+=8)
+  {    
+      truetype.setCharacterSize(fontsize);
+
+      // clear framebuffer before new paint
+      memset(framebuffer, 0x00, DISPLAY_WIDTH * DISPLAY_HEIGHT);  //1bit color
+      truetype.textDraw(0, 0, "This is a Book");  
+      
+      // The following code is just to check the truetype decode result      
+      tft.fillRect(0, 80, 240, 135-90, TFT_BLACK ); //clear text area
+      for (int y=0; y<32; y++) {    
+          //Serial output for debug
+          if (y<10) Serial.print(" ");
+          Serial.print(y);
+          Serial.print(": ");
+        for (int x=0; x<DISPLAY_WIDTH; x++) {
+          byte v=framebuffer[y*DISPLAY_WIDTH+x];
+          Serial.print(v);
+          if (v==1)
+              tft.drawPixel(x, y+80, 0x001F ); //0x001F=blue
+          //else
+          //  tft.drawPixel(x, y+80, 0x0000 ); //0x0000=black // not need if tft is cleared
+        }
+        Serial.println();
+      }
+      delay(1000);
   }
 }
 
